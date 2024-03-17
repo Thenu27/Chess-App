@@ -1,20 +1,19 @@
-import React from 'react';
-import { View, StyleSheet, Dimensions,Image } from 'react-native';
-
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions, Image, TouchableOpacity } from 'react-native';
 
 const boardSize = Dimensions.get('window').width; // Get screen width for responsive design
 const tileSize = boardSize / 8; // Divide by 8 for chessboard size
 
-const StartingChessPosition=[['r','n','b','k','q','b','n','r'],
-                             ['p','p','p','p','p','p','p','p'],
-                             [null,null,null,null,null,null,null,null],
-                             [null,null,null,null,null,null,null,null],
-                             [null,null,null,null,null,null,null,null],
-                             [null,null,null,null,null,null,null,null],
-                             ['P','P','P','P','P','P','P','P'],
-                             ['R','N','B','K','Q','B','N','R']
-
-                            ];
+const StartingChessPosition = [
+  ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'],
+  ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+  [null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null],
+  ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+  ['R', 'N', 'B', 'K', 'Q', 'B', 'N', 'R']
+];
 
 const chessPieceImages={
   r: require("./assets/Rook Black.png"),
@@ -31,37 +30,54 @@ const chessPieceImages={
   Q:require("./assets/Queen white.png")
 };
 
-
-
-
-
 const ChessBoard = () => {
-  const renderSquare = (i, j, piece) => (
-    <View
-      key={`${i}-${j}`}
-      style={[
-        styles.tile,
-        { backgroundColor: (i + j) % 2 === 0 ? 'white' : 'black' },
-      ]}>
-      {piece && (
-        <Image
-          source={chessPieceImages[piece]}
-          style={styles.piece}
-        />
-      )}
-    </View>
-  );
-  
+  const [board, setBoard] = useState(StartingChessPosition);
+  const [selectedPiece, setSelectedPiece] = useState(null);
+
+  const handleSquarePress = (i, j) => {
+    if (selectedPiece) {
+      let newBoard = [...board];
+      newBoard[selectedPiece.x][selectedPiece.y] = null;
+      newBoard[i][j] = selectedPiece.type;
+      setBoard(newBoard);
+      setSelectedPiece(null);
+    } else if (board[i][j]) {
+      setSelectedPiece({ x: i, y: j, type: board[i][j] });
+    }
+  };
+
+  const renderSquare = (i, j) => {
+    const piece = board[i][j];
+    // Determine if the current square is selected
+    const isSelected = selectedPiece && selectedPiece.x === i && selectedPiece.y === j;
+    return (
+      <TouchableOpacity
+        key={`${i}-${j}`}
+        style={[
+          styles.tile,
+          { backgroundColor: (i + j) % 2 === 0 ? 'white' : 'grey' },
+          isSelected && styles.selectedTile
+        ]}
+        onPress={() => handleSquarePress(i, j)}
+      >
+        {piece && (
+          <Image
+            source={chessPieceImages[piece]}
+            style={styles.piece}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const renderBoard = () => {
-    const board = [];
+    let squares = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        const piece = StartingChessPosition[i][j]; // Get the piece from the starting position
-        board.push(renderSquare(i, j, piece));
+        squares.push(renderSquare(i, j));
       }
     }
-    return board;
+    return squares;
   };
 
   return <View style={styles.board}>{renderBoard()}</View>;
@@ -79,9 +95,13 @@ const styles = StyleSheet.create({
     height: tileSize,
   },
   piece: {
-    width: tileSize, // Adjust size as needed
-    height: tileSize, // Adjust size as needed
-    resizeMode: 'contain', // Ensure the image scales correctly
+    width: tileSize,
+    height: tileSize,
+    resizeMode: 'contain',
+  },
+  selectedTile: {
+    borderWidth: 2,
+    borderColor: 'yellow',
   },
 });
 
